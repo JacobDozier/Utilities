@@ -46,6 +46,7 @@ def writeToFile(writeFilePath, toWrite):
     except Exception as writeError:
         appendToFile(writeFilePath, writeError)
 
+# TODO Refactor so that it searches from a list of IP's rather than a hard coded value.
 if __name__ == '__main__':
     deleteFile(errorLogsPath)
     deleteFile(outputPath)
@@ -69,18 +70,3 @@ if __name__ == '__main__':
             print(pyObj)
 
     writeToFile(outputPath, json.dumps(output))
-
-    # writeToFile(correctedJsonPath, correctJson(totalLogs))
-
-    # TODO Refactor so that it searches from a list of IP's rather than a hard coded value.
-    # try:
-    #     with open(correctedJsonPath, "r") as validJson:
-    #         jsonDict = json.load(validJson)
-    #         for pyObj in jsonDict["logs"]:
-    #             if pyObj.get("properties").get("clientIp") == "221.235.236.196":
-    #                 appendToFile(outputPath, json.dumps(pyObj))
-    #                 print(pyObj)
-    # except OSError as jsonDictErr:
-    #     appendToFile(errorLogsPath, jsonDictErr)
-    # except Exception as e:
-    #     appendToFile(errorLogsPath, e)
