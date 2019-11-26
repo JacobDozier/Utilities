@@ -44,7 +44,7 @@ def writeToFile(writeFilePath, toWrite):
         writeFile.write(str(toWrite))
         writeFile.close()
     except Exception as writeError:
-        appendToFile(writeFilePath, writeError)
+        appendToFile(errorLogsPath, writeError)
 
 # TODO Refactor so that it searches from a list of IP's rather than a hard coded value.
 if __name__ == '__main__':
