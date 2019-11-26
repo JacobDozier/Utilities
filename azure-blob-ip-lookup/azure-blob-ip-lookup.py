@@ -1,25 +1,73 @@
 import json
+import os
+
+blobPath = "/Users/jdozier/Documents/y=2019/m={}/d={}/h={}/m=00/PT1H.json"
+correctedJsonPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/PT1H-corrected.json"
+errorLogsPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/errorLogs.txt"
+outputPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/PT1H.json"
+totalLogs = ""
 
 def correctJson(invalidJson):
     """Takes a stringified JSON and adds a parent node and array.
-    Also commas in between objects"""
-
+    Also adds commas in between objects."""
     invalidJson = "{ \"logs\": [ \n" + invalidJson
     invalidJson = invalidJson.replace("}}", "}},")
     invalidJson = invalidJson + "]}\n"
     invalidJson = invalidJson.replace("}},\n]", "}}\n]")
     return invalidJson
 
-# TODO Refactor to search through all files in the various directories under y-2019.
-with open("/Users/jdozier/Documents/y=2019/m=10/d=13/h=00/m=00/PT1H.json", "r") as logs:
-    stringLogs = logs.read()
-    newPT1H = open("/Users/jdozier/Dev/Utilities/PT1H.json", "w")
-    newPT1H.write(correctJson(stringLogs))
-    newPT1H.close()
+def deleteFile(pathToFile):
+    """Deletes the file from the passed absolute pathway."""
+    try:
+        os.remove(pathToFile)
+    except:
+        pass
+
+def appendToFile(appendFilePath, toAppend):
+    """Takes a file path and variable to append. Converts passed variable to a string."""
+    try:
+        appendFile = open(appendFilePath, "a")
+        appendFile.write(str(toAppend))
+        appendFile.write("\n")
+        appendFile.close()
+    except Exception as appendError:
+        print(appendError)
+
+def writeToFile(writeFilePath, toWrite):
+    """Takes a file path and variable to write. Converts passed variable to a string."""
+    try:
+        writeFile = open(writeFilePath, "w")
+        writeFile.write(str(toWrite))
+        writeFile.close()
+    except Exception as writeError:
+        appendToFile(errorLogsPath, writeError)
+
+deleteFile(errorLogsPath)
+deleteFile(outputPath)
+
+for month in range(1, 13):
+    for day in range(1, 32):
+        for hour in range(24):
+            try:
+                with open(blobPath.format(str(month).zfill(2), str(day).zfill(2), str(hour).zfill(2)), "r") as logs:
+                    stringLogs = logs.read()
+                    totalLogs += stringLogs
+            except OSError as jsonCorrectionErr:
+                appendToFile(errorLogsPath, jsonCorrectionErr)
+            except Exception as e:
+                appendToFile(errorLogsPath, e)
+
+writeToFile(correctedJsonPath, correctJson(totalLogs))
 
 # TODO Refactor so that it searches from a list of IP's rather than a hard coded value.
-with open("/Users/jdozier/Dev/Utilities/PT1H.json", "r") as validJson:
-    jsonString = json.load(validJson)
-    for pyObj in jsonString["logs"]:
-        if pyObj.get("properties").get("clientIp") == "108.28.120.26":
-            print(pyObj)
+try:
+    with open(correctedJsonPath, "r") as validJson:
+        jsonDict = json.load(validJson)
+        for pyObj in jsonDict["logs"]:
+            if pyObj.get("properties").get("clientIp") == "221.235.236.196":
+                appendToFile(outputPath, pyObj)
+                print(pyObj)
+except OSError as jsonDictErr:
+    appendToFile(errorLogsPath, jsonDictErr)
+except Exception as e:
+    appendToFile(errorLogsPath, e)
