@@ -1,10 +1,14 @@
 import json
 import os
 
+# File paths
 blobPath = "/Users/jdozier/Documents/y=2019/m={}/d={}/h={}/m=00/PT1H.json"
 correctedJsonPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/PT1H-corrected.json"
 errorLogsPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/errorLogs.txt"
 outputPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/PT1H.json"
+
+# Working vars
+output = []
 totalLogs = ""
 
 def correctJson(invalidJson):
@@ -40,34 +44,43 @@ def writeToFile(writeFilePath, toWrite):
         writeFile.write(str(toWrite))
         writeFile.close()
     except Exception as writeError:
-        appendToFile(errorLogsPath, writeError)
+        appendToFile(writeFilePath, writeError)
 
-deleteFile(errorLogsPath)
-deleteFile(outputPath)
+if __name__ == '__main__':
+    deleteFile(errorLogsPath)
+    deleteFile(outputPath)
 
-for month in range(1, 13):
-    for day in range(1, 32):
-        for hour in range(24):
-            try:
-                with open(blobPath.format(str(month).zfill(2), str(day).zfill(2), str(hour).zfill(2)), "r") as logs:
-                    stringLogs = logs.read()
-                    totalLogs += stringLogs
-            except OSError as jsonCorrectionErr:
-                appendToFile(errorLogsPath, jsonCorrectionErr)
-            except Exception as e:
-                appendToFile(errorLogsPath, e)
+    for month in range(1, 13):
+        for day in range(1, 32):
+            for hour in range(24):
+                try:
+                    with open(blobPath.format(str(month).zfill(2), str(day).zfill(2), str(hour).zfill(2)), "r") as logs:
+                        stringLogs = logs.read()
+                        totalLogs += stringLogs
+                except OSError as jsonCorrectionErr:
+                    appendToFile(errorLogsPath, jsonCorrectionErr)
+                except Exception as e:
+                    appendToFile(errorLogsPath, e)
 
-writeToFile(correctedJsonPath, correctJson(totalLogs))
+    jsonDict = json.loads(correctJson(totalLogs))
+    for pyObj in jsonDict["logs"]:
+        if pyObj.get("properties").get("clientIp") == "221.235.236.196":
+            output.append(pyObj)
+            print(pyObj)
 
-# TODO Refactor so that it searches from a list of IP's rather than a hard coded value.
-try:
-    with open(correctedJsonPath, "r") as validJson:
-        jsonDict = json.load(validJson)
-        for pyObj in jsonDict["logs"]:
-            if pyObj.get("properties").get("clientIp") == "221.235.236.196":
-                appendToFile(outputPath, pyObj)
-                print(pyObj)
-except OSError as jsonDictErr:
-    appendToFile(errorLogsPath, jsonDictErr)
-except Exception as e:
-    appendToFile(errorLogsPath, e)
+    writeToFile(outputPath, json.dumps(output))
+
+    # writeToFile(correctedJsonPath, correctJson(totalLogs))
+
+    # TODO Refactor so that it searches from a list of IP's rather than a hard coded value.
+    # try:
+    #     with open(correctedJsonPath, "r") as validJson:
+    #         jsonDict = json.load(validJson)
+    #         for pyObj in jsonDict["logs"]:
+    #             if pyObj.get("properties").get("clientIp") == "221.235.236.196":
+    #                 appendToFile(outputPath, json.dumps(pyObj))
+    #                 print(pyObj)
+    # except OSError as jsonDictErr:
+    #     appendToFile(errorLogsPath, jsonDictErr)
+    # except Exception as e:
+    #     appendToFile(errorLogsPath, e)
