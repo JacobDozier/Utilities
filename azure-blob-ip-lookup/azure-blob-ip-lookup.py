@@ -5,10 +5,13 @@ import os
 blobPath = "/Users/jdozier/Documents/y=2019/m={}/d={}/h={}/m=00/PT1H.json"
 correctedJsonPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/PT1H-corrected.json"
 errorLogsPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/errorLogs.txt"
+suspiciousIpsPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/suspicious-ips.txt"
 outputPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/PT1H.json"
+
 
 # Working vars
 output = []
+suspiciousIps = []
 totalLogs = ""
 
 def correctJson(invalidJson):
@@ -46,6 +49,20 @@ def writeToFile(writeFilePath, toWrite):
     except Exception as writeError:
         appendToFile(errorLogsPath, writeError)
 
+def readFromFile(readFilePath):
+    try:
+        with open(readFilePath, "r") as readFile:
+            returnedString = readFile.read()
+            return returnedString
+    except Exception as readSuspiciousIpsErr:
+        appendToFile(errorLogsPath, readSuspiciousIpsErr)
+
+def checkForSuspiciousIps(ipsToFind, logsToCheck, output):
+    for ip in ipsToFind:
+        for request in logsToCheck["logs"]:
+            if ip in request["properties"]["clientIp"]:
+                output.append(request)
+
 # TODO Refactor so that it searches from a list of IP's rather than a hard coded value.
 if __name__ == '__main__':
     deleteFile(errorLogsPath)
@@ -64,9 +81,6 @@ if __name__ == '__main__':
                     appendToFile(errorLogsPath, e)
 
     jsonDict = json.loads(correctJson(totalLogs))
-    for pyObj in jsonDict["logs"]:
-        if pyObj.get("properties").get("clientIp") == "221.235.236.196":
-            output.append(pyObj)
-            print(pyObj)
-
+    suspiciousIps = list(readFromFile(suspiciousIpsPath).split("\n"))
+    checkForSuspiciousIps(suspiciousIps, jsonDict, output)
     writeToFile(outputPath, json.dumps(output))
