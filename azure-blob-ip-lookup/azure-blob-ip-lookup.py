@@ -63,7 +63,6 @@ def checkForSuspiciousIps(ipsToFind, logsToCheck, output):
             if ip in request["properties"]["clientIp"]:
                 output.append(request)
 
-# TODO Refactor so that it searches from a list of IP's rather than a hard coded value.
 if __name__ == '__main__':
     deleteFile(errorLogsPath)
     deleteFile(outputPath)
