@@ -1,5 +1,4 @@
-# azure-blob-ip-lookup.py is expecting
-# All directories should be absolute paths.
+# azure-blob-ip-lookup.py is expecting the blob directory location, file of IPs to test, and desired output location
 
 import json
 import os
