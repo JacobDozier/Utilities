@@ -1,13 +1,9 @@
+# azure-blob-ip-lookup.py is expecting
+# All directories should be absolute paths.
+
 import json
 import os
-
-# File paths
-blobPath = "/Users/jdozier/Documents/y=2019/m={}/d={}/h={}/m=00/PT1H.json"
-correctedJsonPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/PT1H-corrected.json"
-errorLogsPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/errorLogs.txt"
-suspiciousIpsPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/suspicious-ips.txt"
-outputPath = "/Users/jdozier/Dev/Utilities/azure-blob-ip-lookup/PT1H.json"
-
+import sys
 
 # Working vars
 output = []
@@ -63,7 +59,36 @@ def checkForSuspiciousIps(ipsToFind, logsToCheck, output):
             if ip in request["properties"]["clientIp"]:
                 output.append(request)
 
+def makeOutputDir(outputPath):
+    try:
+        os.makedirs(outputPath, 0o777)
+    except OSError as outputErr:
+        pass
+
+def checkForTrailingForwardSlash(input):
+    if input[-1] == "/":
+        returnedString = input[0:(len(input) - 1)]
+        return returnedString
+    else:
+        return input
+
 if __name__ == '__main__':
+
+    blobPath = sys.argv[1]
+    blobPath = checkForTrailingForwardSlash(blobPath)
+    blobPath += "/y=2019/m={}/d={}/h={}/m=00/PT1H.json"
+    
+    suspiciousIpsPath = sys.argv[2]
+    suspiciousIpsPath = checkForTrailingForwardSlash(suspiciousIpsPath)
+
+    outputPath = sys.argv[3]
+    outputPath = checkForTrailingForwardSlash(outputPath)
+    makeOutputDir(outputPath + "/azure-blob-ip-lookup")
+
+    correctedJsonPath = outputPath + "/azure-blob-ip-lookup/PT1H-corrected.json"
+    errorLogsPath = outputPath + "/azure-blob-ip-lookup/errorLogs.txt"
+    outputPath += "/azure-blob-ip-lookup/output.json"
+
     deleteFile(errorLogsPath)
     deleteFile(outputPath)
 
@@ -74,8 +99,8 @@ if __name__ == '__main__':
                     with open(blobPath.format(str(month).zfill(2), str(day).zfill(2), str(hour).zfill(2)), "r") as logs:
                         stringLogs = logs.read()
                         totalLogs += stringLogs
-                except OSError as jsonCorrectionErr:
-                    appendToFile(errorLogsPath, jsonCorrectionErr)
+                except OSError as readBlobErr:
+                    appendToFile(errorLogsPath, readBlobErr)
                 except Exception as e:
                     appendToFile(errorLogsPath, e)
 
