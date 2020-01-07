@@ -55,8 +55,9 @@ def readFromFile(readFilePath):
 def checkForSuspiciousIps(ipsToFind, logsToCheck, output):
     for ip in ipsToFind:
         for request in logsToCheck["logs"]:
-            if ip in request["properties"]["clientIp"]:
+            if ip == request["properties"]["clientIp"]:
                 output.append(request)
+    return output
 
 def makeOutputDir(outputPath):
     try:
@@ -75,7 +76,7 @@ if __name__ == '__main__':
 
     blobPath = sys.argv[1]
     blobPath = checkForTrailingForwardSlash(blobPath)
-    blobPath += "/y=2019/m={}/d={}/h={}/m=00/PT1H.json"
+    blobPath += "/y=2020/m={}/d={}/h={}/m=00/PT1H.json"
     
     suspiciousIpsPath = sys.argv[2]
     suspiciousIpsPath = checkForTrailingForwardSlash(suspiciousIpsPath)
@@ -105,5 +106,5 @@ if __name__ == '__main__':
 
     jsonDict = json.loads(correctJson(totalLogs))
     suspiciousIps = list(readFromFile(suspiciousIpsPath).split("\n"))
-    checkForSuspiciousIps(suspiciousIps, jsonDict, output)
+    output = checkForSuspiciousIps(suspiciousIps, jsonDict, output)
     writeToFile(outputPath, json.dumps(output))
