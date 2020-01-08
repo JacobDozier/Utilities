@@ -9,15 +9,6 @@ output = []
 suspiciousIps = []
 totalLogs = ""
 
-def correctJson(invalidJson):
-    """Takes a stringified JSON and adds a parent node and array.
-    Also adds commas in between objects."""
-    invalidJson = "{ \"logs\": [ \n" + invalidJson
-    invalidJson = invalidJson.replace("}}", "}},")
-    invalidJson = invalidJson + "]}\n"
-    invalidJson = invalidJson.replace("}},\n]", "}}\n]")
-    return invalidJson
-
 def deleteFile(pathToFile):
     """Deletes the file from the passed absolute pathway."""
     try:
@@ -51,6 +42,16 @@ def readFromFile(readFilePath):
             return returnedString
     except Exception as readSuspiciousIpsErr:
         appendToFile(errorLogsPath, readSuspiciousIpsErr)
+
+def correctJson(invalidJson):
+    """Takes a stringified JSON and adds a parent node and array.
+    Also adds commas in between objects."""
+    invalidJson = "{ \"logs\": [ \n" + invalidJson
+    invalidJson = invalidJson.replace("}}", "}},")
+    invalidJson = invalidJson + "]}\n"
+    invalidJson = invalidJson.replace("}},\n]", "}}\n]")
+    writeToFile(correctedJsonPath, invalidJson)
+    return invalidJson
 
 def checkForSuspiciousIps(ipsToFind, logsToCheck, output):
     for ip in ipsToFind:
