@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     blobPath = sys.argv[1]
     blobPath = checkForTrailingForwardSlash(blobPath)
-    blobPath += "/y=2020/m={}/d={}/h={}/m=00/PT1H.json"
+    blobPath += "/m={}/d={}/h={}/m=00/PT1H.json"
     
     suspiciousIpsPath = sys.argv[2]
     suspiciousIpsPath = checkForTrailingForwardSlash(suspiciousIpsPath)
