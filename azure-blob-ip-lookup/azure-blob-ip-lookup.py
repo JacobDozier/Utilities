@@ -46,10 +46,10 @@ def readFromFile(readFilePath):
 def correctJson(invalidJson):
     """Takes a stringified JSON and adds a parent node and array.
     Also adds commas in between objects."""
-    invalidJson = "{ \"logs\": [ \n" + invalidJson
+    invalidJson = "{\n \"logs\": [\n" + invalidJson
     invalidJson = invalidJson.replace("}}", "}},")
-    invalidJson = invalidJson + "]}\n"
-    invalidJson = invalidJson.replace("}},\n]", "}}\n]")
+    invalidJson = invalidJson + "]}"
+    invalidJson = invalidJson.replace("}},\n]", "}}]")
     writeToFile(correctedJsonPath, invalidJson)
     return invalidJson
 
@@ -93,19 +93,23 @@ if __name__ == '__main__':
     deleteFile(errorLogsPath)
     deleteFile(outputPath)
 
+    suspiciousIps = list(readFromFile(suspiciousIpsPath).split("\n"))
+
     for month in range(1, 13):
         for day in range(1, 32):
             for hour in range(24):
                 try:
                     with open(blobPath.format(str(month).zfill(2), str(day).zfill(2), str(hour).zfill(2)), "r") as logs:
                         stringLogs = logs.read()
-                        totalLogs += stringLogs
+                        try:
+                            suspiciousIps.append(checkForSuspiciousIps(suspiciousIps, json.loads(stringLogs), output))
+                        except Exception as validJsonError:
+                            appendToFile(errorLogsPath, 'JSON is not valid. Correcting...')
+                            jsonDict = json.loads(correctJson(stringLogs))
+                            suspiciousIps.append(checkForSuspiciousIps(suspiciousIps, jsonDict, output))
                 except OSError as readBlobErr:
                     appendToFile(errorLogsPath, readBlobErr)
                 except Exception as e:
                     appendToFile(errorLogsPath, e)
 
-    jsonDict = json.loads(correctJson(totalLogs))
-    suspiciousIps = list(readFromFile(suspiciousIpsPath).split("\n"))
-    output = checkForSuspiciousIps(suspiciousIps, jsonDict, output)
     writeToFile(outputPath, json.dumps(output))
